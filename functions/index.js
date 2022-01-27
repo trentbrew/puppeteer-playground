@@ -11,8 +11,33 @@ const configuration = new Configuration({
 
 const openai = new OpenAIApi(configuration);
 
+//// Puppeteer scrape data from Twitter for better AI context ////
+
+const puppeteer = require('puppeteer');
+
+async function scrape() {
+    const browser = await puppeteer.launch();
+    const page = await browser.newPage();
+    await page.goto('https://twitter.com/jimcramer', {
+        waitUntil: 'networkidle2',
+    });
+
+    await page.waitForTimeout(3000);
+
+    await page.screenshot({ path: 'example.png' });
+
+    const tweets = await page.evaluate(async () => {
+        return document.body.innerText;
+    });
+
+    await browser.close();
+
+    return tweets;
+}
+
 exports.helloWorld = functions.https.onRequest(async (request, response) => {
 
+    /*const tweets = await scrape();
     const prompt = `Mars is `;
 
     const gptCompletion = await openai.createCompletion('text-davinci-001', {
@@ -24,6 +49,8 @@ exports.helloWorld = functions.https.onRequest(async (request, response) => {
         presence_penalty: 0,
     });
 
-    response.send(gptCompletion.data.choices[0].text);
+    response.send(gptCompletion.data.choices[0].text);*/
+
+    response.send(`hello world: ${await scrape()}`);
 
 });
